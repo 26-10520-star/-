@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>향약집성방 - 나의 체질과 향약 처방</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons for Beautiful UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Elegant Korean Serif & Sans-serif -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Song+Myung&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Gowun Batang"', '"Song Myung"', 'serif'],
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        korean: {
+                            paper: '#fcfaf5',      // 따뜻하고 밝은 백한지색
+                            ink: '#221e1a',        // 부드러운 먹색
+                            green: '#2d4a22',      // 조선 전통 솔잎 초록색
+                            greenDark: '#1b3014',  // 깊은 숲속의 짙은 초록색
+                            greenLight: '#f3f6f2', // 산뜻한 쑥차 연두빛 배경색
+                            brown: '#5a3d28',      // 고풍스러운 약재 갈색
+                            brownDark: '#3d2717',  // 깊이 달여낸 한약 갈색
+                            brownLight: '#ecdcc9', // 밝은 황토/가죽색
+                            gold: '#cfa151',       // 전통 놋그릇 황금색
+                            border: '#e6d8c3'      // 한방 격자 테두리색
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Custom oriental-style scrollbar using brown and green theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #faf7f2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5a3d28;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2d4a22;
+        }
+        /* Classic Hanji Paper effect shadow */
+        .hanji-card {
+            box-shadow: 0 10px 30px -15px rgba(90, 61, 40, 0.12), 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #ecdcc9;
+            background-color: #fcfaf5;
+        }
+        /* Custom animation for brush strokes */
+        @keyframes drawLine {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        .brush-line {
+            height: 3px;
+            background: linear-gradient(90deg, #2d4a22 0%, #5a3d28 50%, transparent 100%);
+            animation: drawLine 1.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-[#f7f4ed] text-stone-950 font-sans min-h-screen flex flex-col antialiased">
+
+    <header class="bg-korean-green text-white py-5 px-6 shadow-md border-b-4 border-korean-gold sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#fcfaf5] text-korean-green p-2 rounded-lg font-serif font-bold text-xl border border-korean-gold shadow-sm">
+                    鄕藥
+                </div>
+                <div>
+                    <h1 class="font-serif text-2xl font-bold tracking-wider text-korean-paper">향약집성방(鄕藥集成方)</h1>
+                    <p class="text-xs text-stone-300 font-serif">조선 산천의 자생 약재로 빚어낸 백성을 위한 의학 유산</p>
+                </div>
+            </div>
+            <!-- 내비게이션 메뉴 -->
+            <nav class="flex gap-2">
+                <button onclick="changeStep('welcome')" id="nav-welcome" class="px-4 py-2 rounded text-sm font-medium transition duration-300 bg-korean-brown border border-korean-brownDark text-white">
+                    <i class="fa-solid fa-house mr-1"></i> 시작처
+                </button>
+                <button onclick="changeStep('test')" id="nav-test" class="px-4 py-2 rounded text-sm font-medium transition duration-300 hover:bg-korean-brown hover:text-white text-emerald-100">
+                    <i class="fa-solid fa-stethoscope mr-1"></i> 체질 감별
+                </button>
+                <button onclick="changeStep('consult')" id="nav-consult" class="px-4 py-2 rounded text-sm font-medium transition duration-300 hover:bg-korean-brown hover:text-white text-emerald-100">
+                    <i class="fa-solid fa-mortar-pestle mr-1"></i> 증상 처방
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-start">
+        
+        <!-- 시작 화면: 향약집성방의 가치를 명확하고 간결하게 설명 -->
+        <section id="step-welcome" class="step-container space-y-6">
+            <div class="bg-korean-paper p-8 md:p-12 rounded-2xl hanji-card relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none hidden lg:block">
+                    <i class="fa-solid fa-book-open text-9xl text-korean-brown"></i>
+                </div>
+                
+                <span class="text-xs uppercase tracking-widest text-korean-brown font-bold font-serif bg-amber-50 px-3 py-1.5 rounded-full border border-korean-border">
+                    세종대왕의 애민정신이 깃든 의학 체험관
+                </span>
+                <h2 class="font-serif text-3xl md:text-4xl font-bold text-korean-green mt-4 mb-2 leading-tight">
+                    "우리 땅의 향약으로<br class="md:hidden"> 조선 백성을 치유하라"
+                </h2>
+                <div class="brush-line mb-6"></div>
+                
+                <p class="text-stone-800 text-base md:text-lg leading-relaxed mb-8 font-serif">
+                    <strong>『향약집성방(1433년)』</strong>은 값비싼 수입 중국산 약재 대신, 
+                    <strong>우리 산과 들에서 쉽게 구할 수 있는 약초(향약)</strong>를 집대성한 조선 고유의 의학 기틀입니다.
+                    <br><br>
+                    간단한 질문으로 나의 체질을 알아보고, 몸의 불편한 증상에 알맞은 조선 전통의 맞춤 처방을 즉시 받아보세요.
+                </p>
+
+                <!-- 역사적 포인트 카드 3가지 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-[#f3f0e7] p-4 rounded-xl border border-korean-border flex gap-3">
+                        <span class="text-2xl text-korean-brown mt-1"><i class="fa-solid fa-seedling"></i></span>
+                        <div>
+                            <h4 class="font-bold text-stone-900 font-serif mb-0.5 text-sm">토종 약초 중심</h4>
+                            <p class="text-xs text-stone-700">우리 기후에 적합하고 한국인 체질에 친숙한 국산 약재 활용.</p>
+                        </div>
+                    </div>
+                    <div class="bg-[#f3f0e7] p-4 rounded-xl border border-korean-border flex gap-3">
+                        <span class="text-2xl text-korean-green mt-1"><i class="fa-solid fa-book-open"></i></span>
+                        <div>
+                            <h4 class="font-bold text-stone-900 font-serif mb-0.5 text-sm">실용적 치유 기록</h4>
+                            <p class="text-xs text-stone-700">959종의 질환과 1만여 개의 실천적 한방 처방전 수록.</p>
+                        </div>
+                    </div>
+                    <div class="bg-[#f3f0e7] p-4 rounded-xl border border-korean-border flex gap-3">
+                        <span class="text-2xl text-korean-gold mt-1"><i class="fa-solid fa-heart-pulse"></i></span>
+                        <div>
+                            <h4 class="font-bold text-stone-900 font-serif mb-0.5 text-sm">따뜻한 백성 치료법</h4>
+                            <p class="text-xs text-stone-700">지방의 가난한 백성들도 쉽게 다려 복용하도록 설계된 애민의 서.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center md:text-left">
+                    <button onclick="changeStep('test')" class="px-8 py-4 bg-korean-brown text-white hover:bg-korean-brownDark font-bold rounded-xl text-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        나의 체질 감별 시작하기 <i class="fa-solid fa-arrow-right ml-2 text-sm text-korean-gold animate-pulse"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 체질 진단 퀴즈 스텝 -->
+        <section id="step-test" class="step-container space-y-6 hidden">
+            <div class="bg-korean-paper p-6 md:p-10 rounded-2xl hanji-card">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <span class="text-xs font-bold text-korean-brown font-serif">첫 번째 체험 단계</span>
+                        <h3 class="text-2xl font-serif font-bold text-stone-900">나의 기운과 체질 감별</h3>
+                    </div>
+                    <span id="quiz-progress" class="text-sm font-bold text-korean-green bg-korean-greenLight px-3 py-1 rounded-full border border-korean-border">질문 1 / 4</span>
+                </div>
+
+                <!-- 진척도 진행 바 -->
+                <div class="w-full bg-[#f1efe9] h-2 rounded-full overflow-hidden mb-8">
+                    <div id="quiz-bar" class="bg-korean-green h-full transition-all duration-500" style="width: 25%;"></div>
+                </div>
+
+                <!-- 질문 표시부 -->
+                <div id="quiz-question-container" class="space-y-6 min-h-[250px] flex flex-col justify-center">
+                    <h4 id="question-text" class="text-xl md:text-2xl font-serif font-bold text-korean-brown text-center leading-relaxed">
+                        평소 더위와 추위 중 어떤 것을 더 타시거나 견디기 힘드십니까?
+                    </h4>
+                    
+                    <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto w-full pt-4">
+                        <!-- 옵션 동적 렌더링 영역 -->
+                    </div>
+                </div>
+
+                <!-- 이전 단계 및 뒤로가기 보조 버튼 -->
+                <div class="flex justify-between mt-8 pt-4 border-t border-korean-border">
+                    <button onclick="changeStep('welcome')" class="px-4 py-2 text-stone-600 hover:text-stone-900 transition">
+                        <i class="fa-solid fa-angle-left mr-1"></i> 처음으로
+                    </button>
+                    <button id="btn-prev-question" onclick="prevQuestion()" class="px-4 py-2 bg-[#f3f0e7] hover:bg-korean-border text-stone-850 font-medium rounded-lg transition hidden">
+                        이전 질문으로
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 체질 감별 분석 결과 스텝 -->
+        <section id="step-result" class="step-container space-y-6 hidden">
+            <div class="bg-korean-paper p-6 md:p-10 rounded-2xl hanji-card relative overflow-hidden">
+                <div class="text-center max-w-2xl mx-auto">
+                    <span class="text-sm font-bold text-korean-brown font-serif">오장육부의 기운 분석 완료</span>
+                    <h3 class="text-3xl font-serif font-bold text-stone-950 mt-1 mb-2">당신의 전통 한의학적 체질은</h3>
+                    
+                    <!-- 결과 타이틀 배너 (갈색 & 초록 중심 디자인) -->
+                    <div class="bg-korean-green text-white p-4 rounded-2xl inline-block my-4 px-10 border-2 border-korean-gold shadow-md">
+                        <h4 id="result-type" class="text-3xl font-serif font-bold tracking-widest text-korean-gold">태음인 (太陰人)</h4>
+                    </div>
+
+                    <p id="result-desc" class="text-stone-850 leading-relaxed font-serif text-base md:text-lg mt-4">
+                        체격이 듬직하고 위장 기능은 튼튼하나, 폐와 호흡기 계통이 약해 땀을 원활하게 흘리는 것이 건강에 이롭습니다.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-korean-border">
+                    <!-- 체질 맞춤 이로운 향약재 -->
+                    <div class="bg-[#f6f3eb] p-6 rounded-xl border border-korean-border">
+                        <h5 class="font-serif font-bold text-lg text-korean-brown mb-3">
+                            <i class="fa-solid fa-seedling mr-1.5"></i> 이로운 토종 향약재(鄕藥材)
+                        </h5>
+                        <ul id="result-herbs" class="space-y-3">
+                            <!-- 약재 리스트 동적 추가 -->
+                        </ul>
+                    </div>
+
+                    <!-- 생활 관리 조언 -->
+                    <div class="bg-korean-greenLight p-6 rounded-xl border border-korean-border">
+                        <h5 class="font-serif font-bold text-lg text-korean-green mb-3">
+                            <i class="fa-solid fa-heart mr-1.5"></i> 생활 속 건강 관리법
+                        </h5>
+                        <ul id="result-advice" class="space-y-2 text-stone-800 text-sm list-disc pl-5">
+                            <!-- 생활 습관 조언 동적 추가 -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mt-10 pt-6 border-t border-korean-border">
+                    <button onclick="restartQuiz()" class="px-6 py-3 bg-[#e8e4da] hover:bg-[#dcd7ca] text-stone-800 rounded-xl font-medium transition duration-300">
+                        체질 다시 진단하기
+                    </button>
+                    <button onclick="goToConsultation()" class="px-8 py-3 bg-korean-brown text-white hover:bg-korean-brownDark font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+                        불편한 증상 처방받기 <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 증상 상담 선택 스텝 -->
+        <section id="step-consult" class="step-container space-y-6 hidden">
+            <div class="bg-korean-paper p-6 md:p-10 rounded-2xl hanji-card">
+                <div class="text-center max-w-2xl mx-auto mb-8">
+                    <span class="text-xs font-bold text-korean-brown font-serif">두 번째 체험 단계</span>
+                    <h3 class="text-2xl md:text-3xl font-serif font-bold text-stone-900 mt-1">몸에서 겪고 있는 불편한 증상은 무엇입니까?</h3>
+                    <p class="text-stone-600 text-sm mt-1">대표 질환 카드를 선택하시거나 하단에 직접 써 주시면 향약집성방 전례 처방을 내립니다.</p>
+                </div>
+
+                <!-- 향약집성방 대표 질환 분류 선택 카드 (보라색이 전혀 없는 갈색/초록 디자인) -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+                    <button onclick="selectPresetSymptom('cough')" class="symptom-card p-4 rounded-xl border-2 border-korean-border bg-[#fdfcf9] hover:border-korean-green hover:bg-korean-greenLight transition-all text-center flex flex-col items-center gap-2 group">
+                        <span class="text-2xl text-stone-500 group-hover:text-korean-green"><i class="fa-solid fa-wind"></i></span>
+                        <h4 class="font-serif font-bold text-stone-950 text-sm">기침과 감기</h4>
+                        <span class="text-[10px] text-stone-600">감모, 기침, 인후염</span>
+                    </button>
+                    <button onclick="selectPresetSymptom('stomach')" class="symptom-card p-4 rounded-xl border-2 border-korean-border bg-[#fdfcf9] hover:border-korean-green hover:bg-korean-greenLight transition-all text-center flex flex-col items-center gap-2 group">
+                        <span class="text-2xl text-stone-500 group-hover:text-korean-green"><i class="fa-solid fa-fire-burner"></i></span>
+                        <h4 class="font-serif font-bold text-stone-950 text-sm">소화 불량</h4>
+                        <span class="text-[10px] text-stone-600">체증, 복통, 구토</span>
+                    </button>
+                    <button onclick="selectPresetSymptom('fatigue')" class="symptom-card p-4 rounded-xl border-2 border-korean-border bg-[#fdfcf9] hover:border-korean-green hover:bg-korean-greenLight transition-all text-center flex flex-col items-center gap-2 group">
+                        <span class="text-2xl text-stone-500 group-hover:text-korean-green"><i class="fa-solid fa-battery-quarter"></i></span>
+                        <h4 class="font-serif font-bold text-stone-950 text-sm">피로와 무기력</h4>
+                        <span class="text-[10px] text-stone-600">기력 쇠약, 식은땀</span>
+                    </button>
+                    <button onclick="selectPresetSymptom('headache')" class="symptom-card p-4 rounded-xl border-2 border-korean-border bg-[#fdfcf9] hover:border-korean-green hover:bg-korean-greenLight transition-all text-center flex flex-col items-center gap-2 group">
+                        <span class="text-2xl text-stone-500 group-hover:text-korean-green"><i class="fa-solid fa-brain"></i></span>
+                        <h4 class="font-serif font-bold text-stone-950 text-sm">두통과 어지럼</h4>
+                        <span class="text-[10px] text-stone-600">편두통, 어지럼증</span>
+                    </button>
+                    <button onclick="selectPresetSymptom('skin')" class="symptom-card p-4 rounded-xl border-2 border-korean-border bg-[#fdfcf9] hover:border-korean-green hover:bg-korean-greenLight transition-all text-center flex flex-col items-center gap-2 group">
+                        <span class="text-2xl text-stone-500 group-hover:text-korean-green"><i class="fa-solid fa-hand-dots"></i></span>
+                        <h4 class="font-serif font-bold text-stone-950 text-sm">피부 종기</h4>
+                        <span class="text-[10px] text-stone-600">가려움, 두드러기</span>
+                    </button>
+                </div>
+
+                <!-- 직접 자유 진술 입력칸 -->
+                <div class="bg-[#f5f1e8] p-6 rounded-xl border border-korean-border">
+                    <h4 class="font-serif font-bold text-stone-900 mb-2"><i class="fa-solid fa-pen-nib text-korean-brown mr-1.5"></i> 어의에게 상세히 털어놓기 (상세 증상 직접 쓰기)</h4>
+                    <textarea id="custom-symptom-input" rows="4" class="w-full p-4 rounded-xl border border-stone-300 focus:ring-2 focus:ring-korean-green focus:outline-none placeholder-stone-500 text-stone-900 bg-white" placeholder="예: 평소 잠을 잘 이루지 못하고, 소화가 잘 안 되면서 어깨가 자주 뭉칩니다."></textarea>
+                    
+                    <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-xs text-stone-600 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-info text-korean-brown text-sm"></i> 
+                            관람객님의 증상을 세종대왕의 애민정신으로 분석하여 정통 향약 처방을 조제해 드립니다.
+                        </div>
+                        <button onclick="submitConsultation()" class="w-full sm:w-auto px-8 py-3.5 bg-korean-green hover:bg-korean-greenDark text-white font-bold rounded-xl shadow-md transition-all duration-300 flex items-center justify-center gap-2">
+                            어의에게 비방(秘方) 요청하기 <i class="fa-solid fa-mortar-pestle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 향약 처방전 스텝 -->
+        <section id="step-prescription" class="step-container space-y-6 hidden">
+            <!-- 로딩 화면 (어의의 고찰) -->
+            <div id="prescription-loading" class="bg-korean-paper p-12 rounded-2xl hanji-card text-center min-h-[350px] flex flex-col justify-center items-center">
+                <div class="relative w-20 h-20 mb-6">
+                    <div class="absolute inset-0 rounded-full border-4 border-amber-100"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-t-korean-brown animate-spin"></div>
+                    <span class="absolute inset-0 flex items-center justify-center text-korean-brown text-2xl"><i class="fa-solid fa-mortar-pestle animate-pulse"></i></span>
+                </div>
+                <h4 class="font-serif text-2xl font-bold text-stone-900">어의께서 고서 향약집성방을 고찰 중이십니다...</h4>
+                <p class="text-stone-600 mt-2 text-sm max-w-md">우리 산천에서 자라나 몸에 순하고 정갈한 토종 향약재(鄕藥材)를 바탕으로 관람객님 체질에 가장 온화하고 기운찬 비법 치료법을 조제하고 있습니다.</p>
+            </div>
+
+            <!-- 실제 처방전 표출부 -->
+            <div id="prescription-result" class="hidden max-w-2xl mx-auto">
+                <div class="bg-korean-paper p-8 md:p-12 rounded-2xl hanji-card relative border-double border-8 border-korean-brown/40">
+                    
+                    <!-- 왕실 어의 낙인 장식 -->
+                    <div class="absolute top-10 right-10 border-4 border-korean-brown text-korean-brown p-2 font-serif font-bold text-sm transform rotate-12 tracking-widest hidden md:block select-none pointer-events-none">
+                        鄕藥集成方<br>御醫之印
+                    </div>
+
+                    <div class="text-center border-b-2 border-dashed border-[#e6d8c3] pb-6 mb-6">
+                        <h3 class="font-serif text-3xl font-bold text-stone-900 tracking-wider">
+                            鄕藥 救急 秘方 (향약 구급 비방)
+                        </h3>
+                        <p class="text-xs text-stone-600 font-serif mt-1.5">조선 세종대왕 조례 어의 조제 • 민족 의학 건강전</p>
+                    </div>
+
+                    <!-- 환자 정보 -->
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-sm border-b border-[#e6d8c3] pb-4">
+                        <div>
+                            <span class="text-stone-500 block">진단 체질</span>
+                            <strong id="presc-constit" class="text-korean-green text-base font-serif font-bold">진단 중</strong>
+                        </div>
+                        <div>
+                            <span class="text-stone-500 block">진단 증상</span>
+                            <strong id="presc-symptom" class="text-stone-850 text-base font-serif font-bold">진단 중</strong>
+                        </div>
+                    </div>
+
+                    <!-- 처방전 본문 텍스트 -->
+                    <div class="space-y-6 font-serif">
+                        <div>
+                            <h5 class="text-sm text-korean-brown font-bold uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-mortar-pestle"></i> 우리 강토의 핵심 향약재 (鄕藥材)
+                            </h5>
+                            <!-- 주성분 -->
+                            <div class="bg-[#f5f1e8] p-4 rounded-xl border border-korean-border">
+                                <h4 id="presc-main-herb" class="text-xl font-bold text-korean-green mb-1">인삼(人蔘) 및 감초(甘草)</h4>
+                                <p id="presc-herb-detail" class="text-stone-800 text-sm leading-relaxed">
+                                    우리나라 태백산맥의 기운을 얻고 건강히 태어난 산삼과 단맛을 풍겨 위를 편하게 하는 감초를 가미하여 오장의 한독을 정화하고 기를 채우는 우수한 향약 비방입니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h5 class="text-sm text-korean-brown font-bold uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-book-medical"></i> 향약집성방 원전 치료 기법
+                            </h5>
+                            <blockquote id="presc-method" class="border-l-4 border-korean-green pl-4 text-stone-900 italic text-base leading-relaxed bg-[#f2f6f1] py-3 pr-3 rounded-r-lg">
+                                "향약집성방 권21 기허문: 몸의 피로가 만성이 되어 허땀이 줄줄 흐를 때, 조선에서 자란 햇황기 네 냥과 참된 백삼 두 냥을 달여 물이 반이 될 때까지 삶은 뒤 공복에 따뜻이 마셔 안태한다."
+                            </blockquote>
+                        </div>
+
+                        <div>
+                            <h5 class="text-sm text-korean-brown font-bold uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-comment-medical"></i> 어의(御醫)의 한방 지혜 조언
+                            </h5>
+                            <p id="presc-advice" class="text-stone-800 text-sm leading-relaxed">
+                                늘 몸의 차가운 수독이 가슴을 누르지 않도록 소식하시고, 조석으로 따뜻한 약차를 음용해 비위가 메마르지 않도록 도우십시오. 솟구치는 화는 깊은 호흡으로 내려놓으심이 이롭습니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 전시용 인쇄 및 저장 버튼 (완전한 갈색 초록 테마) -->
+                    <div class="mt-8 pt-6 border-t border-[#e6d8c3] flex flex-col md:flex-row justify-between gap-4">
+                        <button onclick="changeStep('consult')" class="px-5 py-2.5 bg-[#e8e4da] hover:bg-[#dcd7ca] text-stone-800 rounded-xl transition duration-300 text-sm font-medium">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> 다른 증상 처방받기
+                        </button>
+                        <button onclick="printPrescription()" class="px-6 py-2.5 bg-korean-brown hover:bg-korean-brownDark text-white font-bold rounded-xl transition duration-300 text-sm flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-print text-korean-gold"></i> 나의 처방전 인쇄 (소장용)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-[#1c1916] text-stone-400 py-8 px-6 border-t border-korean-brown/30 text-center text-sm">
+        <div class="max-w-4xl mx-auto space-y-3">
+            <p class="font-serif text-lg text-stone-300 font-bold">鄕藥集成方 특별 디지털 전시 체험관</p>
+            <p class="text-xs text-stone-500 max-w-2xl mx-auto">
+                본 전시는 조선 세종 15년에 창제된 한국 고유 의학서 『향약집성방』의 현대적 보급을 위해 박물관 및 특별전 관람객용 키오스크를 목적으로 기획되었습니다.
+                본 체험에 서술되는 처방 및 생활 건강 가이드는 향약 기록 고찰에 근거합니다.
+            </p>
+            <div class="flex justify-center gap-4 text-stone-600 text-xs pt-2">
+                <span><i class="fa-solid fa-landmark text-korean-gold"></i> 주최: 국립민속박물관 • 한의학진흥원</span>
+                <span><i class="fa-solid fa-code text-korean-green"></i> 디지털 헤리티지 기술 연동관</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           1. Global State Variables
+           ========================================================================== */
+        let currentStep = 'welcome';
+        
+        // 체질 진단용 퀴즈 상태
+        let quizAnswers = [];
+        let currentQuestionIndex = 0;
+
+        // 최종 선택 데이터 보관
+        let selectedConstitution = '';
+        let selectedSymptomCode = '';
+        let customSymptomText = '';
+
+        /* ==========================================================================
+           2. Sasang Constitution Database
+           ========================================================================== */
+        const constitutionData = {
+            'Taeumin': {
+                name: '태음인 (太陰人)',
+                desc: '체격이 듬직하고 위장 기능은 활발하나 폐와 호흡기 계통이 상대적으로 약한 체질입니다. 몸에 노폐물과 습이 쌓이기 쉬워 가벼운 운동 등으로 땀을 원활히 배출해 주면 혈색이 돌고 피로가 풀립니다.',
+                herbs: [
+                    { name: '도라지 (길경, 桔梗)', desc: '기관지를 넓히고 가슴에 쌓인 탁한 기를 씻어 기침을 멈추는 보배로운 향약재.' },
+                    { name: '오미자 (五味子)', desc: '다섯 가지 비범한 맛을 내어 메마른 폐기를 지키고 식은땀을 누그러뜨리는 약초.' },
+                    { name: '율무 (의이인, 薏苡仁)', desc: '몸을 무겁게 짓누르는 체내 수독과 불필요한 습기를 순조롭게 하강시키는 이뇨 약재.' }
+                ],
+                advice: [
+                    '매일 살짝 땀을 흘리는 유산소 운동이 원활한 신진대사에 매우 이롭습니다.',
+                    '과식하기 쉬우므로 과도하게 맵고 짠 자극성 고기를 피하고, 담백한 채소 위주로 드십시오.',
+                    '평소 마른 기침이 자주 나면 도라지와 오미자를 섞어 우려낸 따뜻한 찻물을 즐겨 드십시오.'
+                ]
+            },
+            'Soeumin': {
+                name: '소음인 (少陰人)',
+                desc: '용모가 아담하고 얌전하며 사려가 깊으나, 소화기와 위장이 상대적으로 차갑고 유약한 체질입니다. 오장의 양기가 약해져 한독이 쌓이기 쉬우니 언제나 배를 따뜻하게 유지하고 따스한 향약을 복용해야 합니다.',
+                herbs: [
+                    { name: '인삼 (人蔘)', desc: '차가운 비위를 보하여 위장 활동을 돕고 혈기를 왕성히 부활시키는 군약.' },
+                    { name: '생강 (生薑)', desc: '몸의 냉한 찬독을 땀과 열로 승화시켜 사방으로 발산시키는 대표 향약재.' },
+                    { name: '당귀 (當歸)', desc: '피를 새롭게 보충하여 뇌와 수족으로 향하는 혈류 순환을 촉진하는 명약.' }
+                ],
+                advice: [
+                    '냉수, 밀가루, 냉동식품 같은 찬 성질의 음식은 피하시고 익힌 따뜻한 요리를 드십시오.',
+                    '과도한 스트레스는 위 기능 저하로 이어지므로, 일하는 중간 가벼운 스트레칭과 수면을 보장해야 합니다.',
+                    '몸의 한기를 몰아내기 위해 꿀에 잰 생강가루나 인삼뿌리를 달인 차를 마시면 탁월합니다.'
+                ]
+            },
+            'Soyangin': {
+                name: '소양인 (少陽人)',
+                desc: '상체가 발달해 활달하고 눈썰미가 있으나, 하체의 신장 기능이 약해지기 쉽고 가슴에 울화가 쌓이기 쉬운 체질입니다. 몸을 식히는 시원하고 깨끗한 물과 열독을 빼내는 청량한 약초가 도움이 됩니다.',
+                herbs: [
+                    { name: '구기자 (枸杞子)', desc: '음기를 채우고 신장을 활성화하여 눈을 맑게 하고 위로 오르는 화를 삭히는 한방의 보배.' },
+                    { name: '산수유 (山茱萸)', desc: '과도한 열로 정기가 허투루 유실되는 것을 막아 하체의 원기를 튼튼히 보강함.' },
+                    { name: '복령 (茯苓)', desc: '소나무 기운으로 탄생하여 불안하고 쿵쾅거리는 마음을 진정시키고 수분 순환을 도움.' }
+                ],
+                advice: [
+                    '매운 음식과 과도한 기름은 몸속의 화독을 부추기니 싱그럽고 서늘한 채소류를 위주로 하십시오.',
+                    '쉽게 흥분하거나 화가 나기 쉬우므로, 차분한 들숨과 날숨 조절을 자주 수행하십시오.',
+                    '구기자와 민들레(포공영) 차를 평소 음용하시면 몸속 불필요한 화기가 상쾌하게 정화됩니다.'
+                ]
+            },
+            'Taeyangin': {
+                name: '태양인 (太陽人)',
+                desc: '목덜미 기세가 우수하고 창의력과 추진력이 넘치나, 기운이 위로 쏠려 하체가 약해지거나 구토증세가 나기 쉬운 드문 체질입니다. 기운을 아래로 끌어내려 편안히 안착시키는 것이 좋습니다.',
+                herbs: [
+                    { name: '오가피 (五加皮)', desc: '근골을 가볍고 튼튼하게 하여 다리 힘이 저하되기 쉬운 태양인을 지탱하는 약초.' },
+                    { name: '모과 (木瓜)', desc: '위로 솟구쳐 답답한 기운과 기침을 부드럽게 진정시키고 급체를 다스림.' },
+                    { name: '머루뿌리 (포도근)', desc: '위장관에 맺힌 정체를 풀어 한의학에서 소화와 구토 치료에 응용함.' }
+                ],
+                advice: [
+                    '고지방 육류보다는 조개류 등의 담백한 수산물과 기운을 맑게 해 주는 메밀을 드시는 것이 탁월합니다.',
+                    '감정 기복으로 기운을 급격히 낭비하기 쉬우니 늘 마음에 여유를 두고 차분히 성정을 기르십시오.',
+                    '말린 모과를 연하게 차로 음용하시면 척추와 무릎의 노곤한 기운을 풀어내는 데 특효가 있습니다.'
+                ]
+            }
+        };
+
+        /* ==========================================================================
+           3. Questionnaire Configuration (전통 자가 체질 판별 질문)
+           ========================================================================== */
+        const quizQuestions = [
+            {
+                q: "평소 더위와 추위 중 어떤 기후 상태에서 가장 큰 괴로움을 느끼십니까?",
+                options: [
+                    { text: "더위를 절대 견디지 못하고, 찬물이나 시원한 음료를 끊임없이 원한다.", type: 'Soyangin' },
+                    { text: "추위에 매우 취약해 한여름에도 찬바람을 피하거나 온수를 찾아 마신다.", type: 'Soeumin' },
+                    { text: "추위와 더위 모두 다소 고되지만, 남들에 비해 비교적 덤덤하게 견디는 편이다.", type: 'Taeumin' },
+                    { text: "가슴 위쪽으로 열이 차오르는 답답함이 유독 잦아 시원한 바깥 바람이 상쾌하다.", type: 'Taeyangin' }
+                ]
+            },
+            {
+                q: "스스로가 생각하는 자신의 어깨, 가슴, 그리고 체격적 균형은 어떠합니까?",
+                options: [
+                    { text: "어깨와 가슴 부위가 잘 발달하여 걸음걸이가 다부지나 엉덩이 하반신이 약해 보인다.", type: 'Soyangin' },
+                    { text: "전체적으로 골격이 가늘고 체구가 단정하며, 살이 잘 붙지 않고 슬림하다.", type: 'Soeumin' },
+                    { text: "골격이 우람하고 풍채가 듬직하며, 주로 허리와 복부 주위에 살이 편안히 붙는다.", type: 'Taeumin' },
+                    { text: "목덜미와 머리가 튼튼하게 발달했으나 하체와 무릎 기운이 쉽게 풀리고 떨린다.", type: 'Taeyangin' }
+                ]
+            },
+            {
+                q: "음식을 섭취할 때 위장의 소화 효율이나 기분의 변화는 어떠하십니까?",
+                options: [
+                    { text: "무엇이든 튼튼하게 가리지 않고 잘 먹고 평소 탈이 거의 나지 않는다.", type: 'Taeumin' },
+                    { text: "조금만 마음을 쓰고 신경을 곤두세우면 쉽게 가슴이 체하고 설사 등의 탈이 잦다.", type: 'Soeumin' },
+                    { text: "식사 속도가 다소 급한 편이며 변비에 시달리거나 가끔 위가 욱신거린다.", type: 'Soyangin' },
+                    { text: "속이 한 번씩 까닭 없이 메스껍거나 신물이 식도로 올라오며 음식이 거부된다.", type: 'Taeyangin' }
+                ]
+            },
+            {
+                q: "주변 사람들이 말하는 당신의 평소 행동 양식과 마음 씀씀이는?",
+                options: [
+                    { text: "매우 활달하고 시작을 호기롭게 잘하나 뒤끝이 다소 흐리며 화를 씩씩 낸다.", type: 'Soyangin' },
+                    { text: "매사 정밀하고 꼼꼼하며 사색하기를 좋아하나 가끔 속으로 우울에 잠긴다.", type: 'Soeumin' },
+                    { text: "자기 책임과 도리를 묵묵히 고수하지만 때로는 마음이 아주 게으르고 무덤덤하다.", type: 'Taeumin' },
+                    { text: "창의력과 무리를 리드하는 추진력이 좋으나 때로 자기 고집이 세서 타협이 어렵다.", type: 'Taeyangin' }
+                ]
+            }
+        ];
+
+        /* ==========================================================================
+           4. Static Fallback Database (향약집성방 질환 분류 데이터)
+           ========================================================================== */
+        const symptomDatabase = {
+            'cough': {
+                name: '감기 및 기침(氣心)',
+                mainHerb: '도라지(길경, 桔梗)와 생강(生薑)',
+                detail: '향약집성방 권9 상한문(傷寒門)에 이르길 "길경은 흉격에 걸린 체한 기운을 풀어 인후통을 급히 제거하고 목구멍의 통증을 멎게 한다"고 밝혔으며, 여기에 생강의 매운 활기를 합하면 외한을 발산시키는 데 최고의 조화가 됩니다.',
+                method: '"향약집성방 권9 상한문: 목이 가렵고 기침을 하며 오한이 들 때, 소백산 자생 도라지 반 냥, 신선한 생강 세 돈을 맑은 물에 절반이 되도록 뭉근하게 다려 마시면 밤사이 목구멍의 통증이 크게 감해진다."',
+                advice: '목을 항상 보온하며 찬 바람이나 얼음물 섭취를 절대 엄금하십시오. 조선 민간 전통에 따른 무꿀즙을 따뜻하게 우려 마시는 것도 뛰어난 자가 치유를 돕는 지혜입니다.'
+            },
+            'stomach': {
+                name: '체증 및 장위(腸胃) 장애',
+                mainHerb: '삽주뿌리(백출, 白朮)와 진피(橘皮)',
+                detail: '향약집성방 권15 비위문(脾胃門)에는 "백출은 한기로 가득 찬 비위를 덥혀 소화를 정상으로 돌리고, 설사를 단단하게 멎게 해 오장의 기력을 세운다"고 기록되어 한방의 소화 약제로 중요히 쓰였습니다.',
+                method: '"향약집성방 권15 비위문: 체하고 헛배가 더부룩할 때, 산지의 삽주뿌리 한 냥과 해를 묵혀 말린 귤껍질 세 돈을 곱게 빻아 따뜻한 미음에 개어 삼키면 적체된 담이 한 식경 이내에 해소된다."',
+                advice: '식사 전 배꼽 주변을 손으로 시계 방향으로 30회 이상 따뜻하게 쓸어 가볍게 마사지하여 막힌 식적의 물길을 터 주도록 생활화하십시오.'
+            },
+            'fatigue': {
+                name: '만성 기력 쇠약 (기허, 氣虛)',
+                mainHerb: '인삼(人蔘)과 황기(黃耆)',
+                detail: '향약집성방 권21 기허문(氣虛門)에서 이르기를 "인삼은 마르고 지친 장부의 맥을 세워 숨가쁨을 면하고, 황기는 피부의 기운을 다져 땀이 줄줄 흐르는 탈진을 방어한다"고 서술하여 체력 고갈의 최상방이라 명했습니다.',
+                method: '"향약집성방 권21 기허문: 극심한 노동이나 피로로 목숨의 기력이 조각났을 때, 양질의 토종 삼 세 돈과 달여 말린 황기 세 돈을 가마에 은근히 다려 빈속에 취해 혈기를 보존하는 것이 정석이다."',
+                advice: '밤늦은 작업이나 지나친 집념은 오장의 정수를 태우는 주범이니 이른 침소에서 충분히 휴식을 보장해 우주의 깊은 기운을 뼈에 가두도록 애쓰십시오.'
+            },
+            'headache': {
+                name: '두통 및 어지럼증',
+                mainHerb: '천궁(川芎)과 국화(감국, 甘菊)',
+                detail: '향약집성방 권11 두통문(頭痛門)에 서술되길 "천궁은 풍과 습이 머리꼭대기에 올라 골을 쑤시게 하는 상충 기운을 다스리며, 야생 감국은 뇌와 눈을 식혀 어두워진 시야를 부활시킨다" 하였으니 머리를 가볍게 하는 핵심약입니다.',
+                method: '"향약집성방 권11 두통문: 편두통과 현기증이 날 때, 청정 영남의 천궁 세 돈과 서리 내린 들에 핀 노란 감국 말린 것 두 돈을 고은 물로 정성스레 달여 복용하면 즉각 정신이 맑아진다."',
+                advice: '머리는 늘 차갑게 돌보고 발과 아랫배는 뜸이나 온수로 항상 덥게 하여 한의의 근본인 두한족열(頭寒足熱)의 균형을 필히 생활화하십시오.'
+            },
+            'skin': {
+                name: '창양 및 피부 열독(皮膚)',
+                mainHerb: '지치(자초, 紫草)와 민들레(포공영, 蒲公英)',
+                detail: '향약집성방 권51 창양문(瘡瘍門)에서는 "자초는 혈 속에 찌든 화독을 밀어내고 종기를 누그러뜨려 주며, 들민들레인 포공영은 상처가 ꪳ아 열이 나는 고열 염증을 식히는 데 국산 향약 중 가장 유용하다" 하였습니다.',
+                method: '"향약집성방 권51 창양문: 가렵고 붉어지는 열독이 퍼졌을 적에, 신선한 지치뿌리 세 돈과 생민들레 잎을 짓찧어 즙을 내 바르고 남은 찌꺼기를 물에 고아 삼키면 한 나절 만에 가려움증이 잦아든다."',
+                advice: '가공되거나 기름이 과해 오장에 담화를 축적하는 현대 밀가루 및 화학 음식을 엄격히 금하시고 오직 물과 한지처럼 담백한 들풀 위주의 식사로 혈맥을 비워내십시오.'
+            }
+        };
+
+        /* ==========================================================================
+           5. Navigation Controls
+           ========================================================================== */
+        function changeStep(stepId) {
+            currentStep = stepId;
+            
+            // 모든 스텝 컨테이너 숨기기
+            document.querySelectorAll('.step-container').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // 해당 스텝 보이기
+            const activeStep = document.getElementById(`step-${stepId}`);
+            if (activeStep) {
+                activeStep.classList.remove('hidden');
+                activeStep.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // 내비게이션 바 하이라이트 제어 (갈색 초록 테마에 맞춰 고정)
+            const navs = ['welcome', 'test', 'consult'];
+            navs.forEach(n => {
+                const navBtn = document.getElementById(`nav-${n}`);
+                if (!navBtn) return;
+                
+                if (n === stepId || (stepId === 'result' && n === 'test') || (stepId === 'prescription' && n === 'consult')) {
+                    navBtn.className = "px-4 py-2 rounded text-sm font-medium transition duration-300 bg-korean-brown border border-korean-brownDark text-white";
+                } else {
+                    navBtn.className = "px-4 py-2 rounded text-sm font-medium transition duration-300 hover:bg-korean-brown hover:text-white text-emerald-100";
+                }
+            });
+
+            // 스텝 특화 처리
+            if (stepId === 'test') {
+                initQuiz();
+            }
+        }
+
+        /* ==========================================================================
+           6. Constitution Quiz Algorithm Block
+           ========================================================================== */
+        function initQuiz() {
+            quizAnswers = [];
+            currentQuestionIndex = 0;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const currentQ = quizQuestions[currentQuestionIndex];
+            
+            // 프로그레스 바 및 텍스트 갱신
+            document.getElementById('quiz-progress').innerText = `질문 ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
+            const percent = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('quiz-bar').style.width = `${percent}%`;
+
+            // 질문 내용
+            document.getElementById('question-text').innerText = currentQ.q;
+
+            // 이전 질문 가기 버튼 상태
+            const btnPrev = document.getElementById('btn-prev-question');
+            if (currentQuestionIndex > 0) {
+                btnPrev.classList.remove('hidden');
+            } else {
+                btnPrev.classList.add('hidden');
+            }
+
+            // 질문 항목 렌더링
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            currentQ.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-5 rounded-xl border-2 border-korean-border bg-white hover:border-korean-green hover:bg-korean-greenLight active:bg-stone-200 transition duration-300 flex items-center gap-4 group";
+                btn.onclick = () => selectOption(opt.type);
+
+                const numSpan = document.createElement('span');
+                numSpan.className = "w-8 h-8 rounded-full border border-stone-300 text-stone-500 font-serif flex items-center justify-center font-bold text-sm bg-[#faf8f4] group-hover:bg-korean-brown group-hover:text-white group-hover:border-korean-brown transition";
+                numSpan.innerText = idx + 1;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = "text-stone-900 text-sm md:text-base font-serif font-medium flex-grow";
+                textSpan.innerText = opt.text;
+
+                btn.appendChild(numSpan);
+                btn.appendChild(textSpan);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(type) {
+            quizAnswers.push(type);
+            
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                calculateQuizResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                quizAnswers.pop();
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function calculateQuizResult() {
+            // 체질 점수 산출
+            const counts = { 'Taeumin': 0, 'Soeumin': 0, 'Soyangin': 0, 'Taeyangin': 0 };
+            quizAnswers.forEach(type => {
+                counts[type] = (counts[type] || 0) + 1;
+            });
+
+            let maxType = 'Taeumin';
+            let maxCount = -1;
+            for (const type in counts) {
+                if (counts[type] > maxCount) {
+                    maxCount = counts[type];
+                    maxType = type;
+                }
+            }
+
+            selectedConstitution = maxType;
+            showConstitutionResult();
+        }
+
+        function showConstitutionResult() {
+            const data = constitutionData[selectedConstitution];
+            
+            document.getElementById('result-type').innerText = data.name;
+            document.getElementById('result-desc').innerText = data.desc;
+
+            // 이로운 약재 바인딩
+            const herbList = document.getElementById('result-herbs');
+            herbList.innerHTML = '';
+            data.herbs.forEach(h => {
+                const li = document.createElement('li');
+                li.className = "flex gap-3 items-start text-stone-800 text-sm";
+                li.innerHTML = `
+                    <span class="text-korean-brown mt-0.5"><i class="fa-solid fa-leaf"></i></span>
+                    <div>
+                        <strong class="font-serif text-stone-900">${h.name}</strong> - <span>${h.desc}</span>
+                    </div>
+                `;
+                herbList.appendChild(li);
+            });
+
+            // 생활조언 바인딩
+            const adviceList = document.getElementById('result-advice');
+            adviceList.innerHTML = '';
+            data.advice.forEach(adv => {
+                const li = document.createElement('li');
+                li.innerText = adv;
+                adviceList.appendChild(li);
+            });
+
+            changeStep('result');
+        }
+
+        function restartQuiz() {
+            initQuiz();
+            changeStep('test');
+        }
+
+        function goToConsultation() {
+            changeStep('consult');
+        }
+
+        /* ==========================================================================
+           7. Prescription & Gemini API Core Integration
+           ========================================================================== */
+        function selectPresetSymptom(code) {
+            selectedSymptomCode = code;
+            customSymptomText = '';
+            
+            // 프리셋 카드 테두리 리셋 및 액티브 처리
+            document.querySelectorAll('.symptom-card').forEach(el => {
+                el.classList.remove('border-korean-green', 'bg-korean-greenLight');
+            });
+            
+            document.getElementById('custom-symptom-input').value = '';
+            buildAndShowPrescription();
+        }
+
+        async function submitConsultation() {
+            const val = document.getElementById('custom-symptom-input').value.trim();
+            if (val.length < 5) {
+                if (selectedSymptomCode) {
+                    buildAndShowPrescription();
+                } else {
+                    alert("원하시는 불편함을 카드로 선택하시거나, 상세히 하단 란에 5자 이상 기록하여 조제를 청하십시오.");
+                }
+                return;
+            }
+
+            selectedSymptomCode = 'custom';
+            customSymptomText = val;
+            await buildAndShowPrescription();
+        }
+
+        async function buildAndShowPrescription() {
+            changeStep('prescription');
+            
+            const loadingSec = document.getElementById('prescription-loading');
+            const resultSec = document.getElementById('prescription-result');
+            
+            loadingSec.classList.remove('hidden');
+            resultSec.classList.add('hidden');
+
+            const constitName = selectedConstitution ? constitutionData[selectedConstitution].name : "미진단 체질";
+            document.getElementById('presc-constit').innerText = constitName;
+
+            if (selectedSymptomCode === 'custom') {
+                // 직접 증상을 상세 입력한 경우 AI(Gemini API) 호출
+                document.getElementById('presc-symptom').innerText = customSymptomText.substring(0, 15) + (customSymptomText.length > 15 ? '...' : '');
+                
+                try {
+                    await callGeminiForPrescription(constitName, customSymptomText);
+                } catch (err) {
+                    console.error("실시간 어의 상담에 실패해 향약집성방의 기본 피로 처방으로 대체합니다.", err);
+                    loadLocalFallbackPrescription();
+                }
+            } else {
+                // 프리셋 카드를 선택한 경우 로컬 정적 지혜DB에서 불러옴
+                const pData = symptomDatabase[selectedSymptomCode];
+                document.getElementById('presc-symptom').innerText = pData.name;
+                
+                document.getElementById('presc-main-herb').innerText = pData.mainHerb;
+                document.getElementById('presc-herb-detail').innerText = pData.detail;
+                document.getElementById('presc-method').innerText = pData.method;
+                document.getElementById('presc-advice').innerText = pData.advice;
+            }
+
+            // 가상 대기 모션 연출 후 결과 표출 (고전적 미학 연출)
+            setTimeout(() => {
+                loadingSec.classList.add('hidden');
+                resultSec.classList.remove('hidden');
+            }, 800);
+        }
+
+        function loadLocalFallbackPrescription() {
+            const pData = symptomDatabase['fatigue'];
+            document.getElementById('presc-main-herb').innerText = pData.mainHerb;
+            document.getElementById('presc-herb-detail').innerText = pData.detail;
+            document.getElementById('presc-method').innerText = pData.method;
+            document.getElementById('presc-advice').innerText = pData.advice;
+        }
+
+        // 실시간 생성형 어의(AI) 연동
+        async function callGeminiForPrescription(constitution, symptom) {
+            const systemPrompt = `당신은 조선 세종 시대의 어의(왕실 한의학관)입니다. 세종대왕의 명으로 완성된 한의학 백과서 '향약집성방(鄕藥集成方)'을 기반으로 백성들의 병증을 한방적으로 분석하여 자생 토종 약재(향약) 처방과 치료법을 내려 줍니다. 절대 비싸고 구하기 힘든 중국산 수입 당재가 아니라, 우리 강토에서 채취하기 쉽고 효과적인 약초(인삼, 길경, 백출, 모과, 생강, 감국, 복령 등)를 인용하십시오.
+
+아래 JSON 스키마 구조의 유효한 한글 텍스트만을 반드시 출력해야 합니다:
+{
+  "mainHerb": "대표 자생 약재명 (한글 및 한자 병기)",
+  "herbDetail": "해당 약초의 오장 치료 효능 및 우리 강토에서 자라나 해롭지 않음을 친절히 서술 (2~3문장)",
+  "rawMethod": "향약집성방의 서체와 치료법을 본딴 고풍스러운 고서 원전 인용문 (하오체)",
+  "physicianAdvice": "체질 건강 조절을 위해 일상에서 즉각 실천할 보온, 운동, 심성 관리 조언 (따스한 하오체)"
+}`;
+
+            const userQuery = `체질: [${constitution}], 호소 증상: [${symptom}]. 이 기왕에 맞는 실제 향약집성방에 어긋나지 않는 향약 치료 비책을 내려 주옵소서.`;
+            const apiKey = ""; // Canvas 런타임 환경에서 자동 처리됨
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "mainHerb": { "type": "STRING" },
+                            "herbDetail": { "type": "STRING" },
+                            "rawMethod": { "type": "STRING" },
+                            "physicianAdvice": { "type": "STRING" }
+                        },
+                        "required": ["mainHerb", "herbDetail", "rawMethod", "physicianAdvice"]
+                    }
+                },
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error("Gemini API 통신 실패");
+            }
+
+            const result = await response.json();
+            const candidateText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (candidateText) {
+                const parsed = JSON.parse(candidateText);
+                
+                document.getElementById('presc-main-herb').innerText = parsed.mainHerb;
+                document.getElementById('presc-herb-detail').innerText = parsed.herbDetail;
+                document.getElementById('presc-method').innerText = parsed.rawMethod;
+                document.getElementById('presc-advice').innerText = parsed.physicianAdvice;
+            } else {
+                throw new Error("API 결과 비정상");
+            }
+        }
+
+        /* ==========================================================================
+           8. Print Feature
+           ========================================================================== */
+        function printPrescription() {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4";
+            modal.id = "print-info-modal";
+            modal.innerHTML = `
+                <div class="bg-[#fcfaf5] p-6 max-w-md w-full rounded-2xl border-4 border-korean-brown text-center font-serif">
+                    <span class="text-3xl text-korean-brown"><i class="fa-solid fa-scroll"></i></span>
+                    <h4 class="text-xl font-bold mt-3 text-stone-900">향약 처방전 인쇄 • 소장</h4>
+                    <p class="text-sm text-stone-700 my-4 leading-relaxed">
+                        전시 키오스크에 구비된 프린터를 통해 따뜻한 전통 한지 스타일로 인쇄하시거나, 화면을 촬영하여 관람 기념물로 소중히 간직해 주십시오.
+                    </p>
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="triggerActualPrint()" class="px-5 py-2 bg-korean-green text-white rounded-lg text-sm font-bold hover:bg-korean-greenDark">인쇄하기</button>
+                        <button onclick="closePrintModal()" class="px-5 py-2 bg-[#e8e4da] hover:bg-[#dcd7ca] text-stone-750 rounded-lg text-sm">닫기</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closePrintModal() {
+            const modal = document.getElementById('print-info-modal');
+            if (modal) modal.remove();
+        }
+
+        function triggerActualPrint() {
+            closePrintModal();
+            window.print();
+        }
+    </script>
+</body>
+</html>
